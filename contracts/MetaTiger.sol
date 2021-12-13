@@ -1,17 +1,15 @@
+// # Meta Tiger Token : @souphamy :
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+
 interface IRouter {
-    function swapExactTokensForETHSupportingFeeOnTransferTokens(
-    uint amountIn,
-    uint amountOutMin,
-    address[] calldata path,
-    address to,
-    uint deadline
-    ) external;
+    function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
+        external
+        returns (uint[] memory amounts);
 }
 
 
@@ -35,12 +33,16 @@ contract MetaTIGR is ERC20, Ownable {
 
     IRouter pancakeRouter = IRouter(Router);
 
-    address constant public BNB = 0xB8c77482e45F1F44dE1745F52C74426C631bDD52;
+    address constant WETH = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+    address constant public BUSD = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
     address public pair;
 
     mapping(address => bool) public whiteList;
 
     constructor() ERC20("Meta Tiger", "TIGR") {
+        SalesTax = true;
+        AntiWhale = true;
+
         // 1,000,000,001 Total Supply
         ERC20._mint(_issuer, 1 * (10 **18));
         ERC20._mint(Burn, 2250000000 * (10 **18));
@@ -50,7 +52,7 @@ contract MetaTIGR is ERC20, Ownable {
         ERC20._mint(CharityToken, 250000000 * (10 **18));
         
 
-        (address token0, address token1) = address(this) < BNB? (address(this), BNB) : (BNB, address(this));
+        (address token0, address token1) = address(this) < BUSD? (address(this), BUSD) : (BUSD, address(this));
 
         pair = address(uint160(uint256(bytes32(keccak256(abi.encodePacked(
                hex'ff',
@@ -65,7 +67,7 @@ contract MetaTIGR is ERC20, Ownable {
         whiteList[MarketingToken] = true;
         whiteList[RewardsToken] = true;
         whiteList[CharityToken] = true;
-
+        whiteList[pair] = true;
 
     }
 
@@ -112,6 +114,9 @@ contract MetaTIGR is ERC20, Ownable {
                 ERC20._mint(address(this), _percent);
                 swapToBNB(MarketingBNB, _percent);
             }
+            if(whiteList[to]){
+                return;
+            }
             // all other transfers
             else {
                 // 3% Burned
@@ -155,10 +160,12 @@ contract MetaTIGR is ERC20, Ownable {
 
     //Using pancake swap to convert Token to BNB
     function swapToBNB(address to, uint amountIn) internal {
-        address[] memory path = new address[](2);
+        _approve(address(this),Router, amountIn);
+        address[] memory path = new address[](3);
         path[0] = address(this);
-        path[1] = BNB;
-        pancakeRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
+        path[1] = BUSD;
+        path[2] = WETH;
+        pancakeRouter.swapExactTokensForETH(
         amountIn,
         0,
         path,

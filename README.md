@@ -1,4 +1,4 @@
-# Meta Tiger Token
+# Meta Tiger Token : @souphamy :
 
 This project contains source code of token Meta TIGER (TIGR)
 

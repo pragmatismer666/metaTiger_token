@@ -1,3 +1,4 @@
+// # Meta Tiger Token : @souphamy :
 // We require the Hardhat Runtime Environment explicitly here. This is optional
 // but useful for running the script in a standalone fashion through `node <script>`.
 //
@@ -14,7 +15,7 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const MetaTiger = await hre.ethers.getContractFactory("MetaTiger");
+  const MetaTiger = await hre.ethers.getContractFactory("MetaTIGR");
   const metaTiger = await MetaTiger.deploy();
 
   await metaTiger.deployed();
